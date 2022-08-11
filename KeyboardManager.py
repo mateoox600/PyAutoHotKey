@@ -1,6 +1,5 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-
 from pynput.keyboard import Controller
 
 class KeyPress(ABC):
@@ -46,8 +45,5 @@ class KeyboardManager:
     def __init__(self):
         self.controller = Controller()
 
-    def callTree(self, root: KeyPress | list[KeyPress]):
-        if isinstance(root, list):
-            [key.call(self) for key in root]
-        else:
-            root.call(self)
+    def call_key(self, key: KeyPress):
+        key.call(self)
