@@ -1,5 +1,5 @@
-from KeyboardManager import KeyboardManager
 from FileParser import Parser
+from KeyboardManager import KeyboardManager
 
 keyboard = KeyboardManager()
 
