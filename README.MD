@@ -85,3 +85,17 @@ t(2000)
 after
 ```
 It will write "before" then wait 2 seconds and after those write "after".
+
+---
+
+#### Keybind/Hotkeys:
+Keybinds are a way to automate some action under a key sequence. </br>
+To have some keybinds like `ctrl+t` you use key holds </br>
+Syntax: `trigger_key { instruction }` </br>
+Syntax with key hold: `hold_key[ trigger_key ] { instruction }`
+
+Example:
+```
+k(ctrl) [ k(shift) [ f ] ] { t(1000) testing }
+```
+When `ctrl+shift+f` is pressed it will wait 1s and then write testing.

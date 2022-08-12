@@ -6,6 +6,7 @@ from Types import Instruction
 from instructions.GeneralInstruction import WaitInstruction
 from instructions.KeyboardManager import KeyTap, KeyHold
 from instructions.MouseManager import MouseClick, MouseMove
+from instructions.KeybindManager import Keybind
 
 class TokenType(Enum):
     NO_TOKEN = 0
@@ -14,6 +15,7 @@ class TokenType(Enum):
     KEY_LIST_TOKEN = 3
     MOUSE_INSTRUCTION_TOKEN = 4
     TIME_WAIT_TOKEN = 5
+    KEYBIND_TOKEN = 6
 
 class Parser:
 
@@ -23,13 +25,19 @@ class Parser:
         self.tokens = []
         self.current_token = ''
         self.current_token_type = TokenType.NO_TOKEN
+        self.opened = {
+            '(': 0,
+            '[': 0,
+            '{': 0
+        }
 
         self.parse_string()
-        self.combine_hold_key()
+        self.combine_keys()
         self.transform_tokens_to_instructions()
 
     def finish_token(self):
-        if self.current_token_type == TokenType.KEY_LIST_TOKEN:
+        if self.current_token_type in (TokenType.KEY_LIST_TOKEN, TokenType.KEYBIND_TOKEN):
+            self.current_token = self.current_token[1:-1]
             self.parse_key_list_from_current()
         elif self.current_token_type in (
                 TokenType.MULTIPLE_CHAR_KEY_TOKEN,
@@ -41,11 +49,11 @@ class Parser:
         self.current_token_type = TokenType.NO_TOKEN
 
     def parse_key_list_from_current(self):
-        current_token_value = self.current_token \
-            .removeprefix('[') \
-            .removesuffix(']')
-        parser = Parser(current_token_value)
+        parser = Parser(self.current_token)
         self.current_token = parser.get_return()
+
+    def any_opened(self):
+        return self.opened['('] == 0 and self.opened['['] == 0 and self.opened['{'] == 0
 
     def parse_string(self):
         for char in [*self.string]:
@@ -54,6 +62,7 @@ class Parser:
             if self.current_token_type == TokenType.SINGLE_CHAR_KEY_TOKEN:
                 if char == '(':
                     self.current_token += char
+                    self.opened['('] += 1
                     if self.current_token.startswith('k'):
                         self.current_token_type = TokenType.MULTIPLE_CHAR_KEY_TOKEN
                         continue
@@ -65,41 +74,58 @@ class Parser:
                         continue
                 else:
                     self.finish_token()
+            self.current_token += char
+            if self.current_token_type != TokenType.NO_TOKEN:
+                if char == '(':
+                    self.opened['('] += 1
+                elif char == '[':
+                    self.opened['['] += 1
+                elif char == '{':
+                    self.opened['{'] += 1
+                elif char == ')':
+                    self.opened['('] -= 1
+                elif char == ']':
+                    self.opened['['] -= 1
+                elif char == '}':
+                    self.opened['{'] -= 1
             if self.current_token_type == TokenType.NO_TOKEN:
-                self.current_token += char
                 if char == '[':
+                    self.opened['['] += 1
                     self.current_token_type = TokenType.KEY_LIST_TOKEN
+                elif char == '{':
+                    self.opened['{'] += 1
+                    self.current_token_type = TokenType.KEYBIND_TOKEN
                 else:
                     self.current_token_type = TokenType.SINGLE_CHAR_KEY_TOKEN
             elif self.current_token_type in (
                     TokenType.MULTIPLE_CHAR_KEY_TOKEN,
                     TokenType.MOUSE_INSTRUCTION_TOKEN,
                     TokenType.TIME_WAIT_TOKEN):
-                self.current_token += char
-                if char == ')':
+                if char == ')' and self.any_opened():
                     self.finish_token()
             elif self.current_token_type == TokenType.KEY_LIST_TOKEN:
-                self.current_token += char
-                if char == ']':
+                if char == ']' and self.any_opened():
+                    self.finish_token()
+            elif self.current_token_type == TokenType.KEYBIND_TOKEN:
+                if char == '}' and self.any_opened():
                     self.finish_token()
 
         if self.current_token_type != TokenType.NO_TOKEN:
             self.finish_token()
 
-    def combine_hold_key(self):
+    def combine_keys(self):
         new_tokens = []
         last_token = None
         for token in self.tokens:
             if last_token is None:
                 last_token = token
                 continue
-            if token[0] == TokenType.KEY_LIST_TOKEN:
-                new_tokens.append((
+            if token[0] in (TokenType.KEY_LIST_TOKEN, TokenType.KEYBIND_TOKEN):
+                last_token = (
                     token[0],
                     last_token,
                     token[1]
-                ))
-                last_token = None
+                )
             else:
                 new_tokens.append(last_token)
                 last_token = token
@@ -117,6 +143,9 @@ class Parser:
         elif token[0] == TokenType.KEY_LIST_TOKEN:
             hold_key = self.transform_token_to_instruction(token[1])
             return KeyHold(hold_key.key, token[2])
+        elif token[0] == TokenType.KEYBIND_TOKEN:
+            hold_key = self.transform_token_to_instruction(token[1])
+            return Keybind(hold_key, token[2])
         elif token[0] == TokenType.MOUSE_INSTRUCTION_TOKEN:
             if re.match(r'\D+', token[1]):
                 return MouseClick(Button[token[1]])
