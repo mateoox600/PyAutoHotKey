@@ -5,14 +5,14 @@ from abc import ABC, abstractmethod
 class MouseInstruction(ABC):
     @abstractmethod
     def __init__(self):
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def call(self, mouse: MouseManager):
-        pass
+        raise NotImplementedError()
 
 class MouseClick(MouseInstruction):
-    def __init__(self, button):
+    def __init__(self, button: int):
         self.button = button
 
     def call(self, mouse: MouseManager):
@@ -23,7 +23,7 @@ class MouseClick(MouseInstruction):
         return f'MouseClick[button={self.button}]'
 
 class MouseMove(MouseInstruction):
-    def __init__(self, position):
+    def __init__(self, position: tuple[int, int]):
         self.position = position
 
     def call(self, mouse: MouseManager):

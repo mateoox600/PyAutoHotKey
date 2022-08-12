@@ -2,9 +2,10 @@ import re
 from enum import Enum
 from pynput.keyboard import Key
 from pynput.mouse import Button
-from GeneralInstruction import WaitInstruction
-from KeyboardManager import KeyTap, KeyHold
-from MouseManager import MouseClick, MouseMove
+from Types import Instruction
+from instructions.GeneralInstruction import WaitInstruction
+from instructions.KeyboardManager import KeyTap, KeyHold
+from instructions.MouseManager import MouseClick, MouseMove
 
 class TokenType(Enum):
     NO_TOKEN = 0
@@ -133,5 +134,5 @@ class Parser:
             instructions.append(self.transform_token_to_instruction(token))
         self.tokens = instructions
 
-    def get_return(self):
+    def get_return(self) -> list[Instruction]:
         return self.tokens

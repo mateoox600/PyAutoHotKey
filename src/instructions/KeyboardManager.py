@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from pynput.keyboard import Controller
+from pynput.keyboard import Controller, Key
 
 class KeyPress(ABC):
     @abstractmethod
@@ -12,7 +12,7 @@ class KeyPress(ABC):
         pass
 
 class KeyTap(KeyPress):
-    def __init__(self, key):
+    def __init__(self, key: Key | str):
         self.key = key
 
     def call(self, keyboard: KeyboardManager):
@@ -23,7 +23,7 @@ class KeyTap(KeyPress):
         return f'KeyTap[key={self.key}]'
 
 class KeyHold(KeyPress):
-    def __init__(self, key, sub_keys: KeyPress | list[KeyPress] = None):
+    def __init__(self, key: Key | str, sub_keys: KeyPress | list[KeyPress] = None):
         if sub_keys is None:
             sub_keys = list()
         self.key = key
