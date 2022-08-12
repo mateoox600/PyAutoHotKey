@@ -15,6 +15,9 @@ t(1000) m(right) t(1000) k(down) t(1000) k(down) t(1000) k(enter) t(1000)
 m(2000, 500)
 ```
 
+To run a script simply do:
+`python3 src/main.py /path/to/script/`
+
 ---
 
 ### Doc

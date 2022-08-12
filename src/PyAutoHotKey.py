@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from Types import Instruction
 from instructions.KeyboardManager import KeyboardManager, KeyPress
 from instructions.MouseManager import MouseManager, MouseInstruction
@@ -16,7 +17,7 @@ class PyAutoHotKey:
         instruction_tree = parser.get_return()
         self.call_tree(instruction_tree)
 
-    def execute_file(self, file_name: str):
+    def execute_file(self, file_name: Path):
         with open(file_name, 'r') as file:
             file_content = file.read()
             self.execute_string(file_content)
