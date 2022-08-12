@@ -1,7 +1,5 @@
 ## PyAutoHotKey
 
----
-
 PyAutoHotKey is an AutoHotKey-like in python with it's own syntax
 
 ---
