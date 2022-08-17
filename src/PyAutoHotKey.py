@@ -24,7 +24,7 @@ class PyAutoHotKey:
             file_content = file.read()
             self.execute_string(file_content)
 
-    def call_tree(self, tree: list[Instruction], keybind = True):
+    def call_tree(self, tree: list[Instruction], keybind=True):
         keybinds = []
         for instruction in tree:
             if isinstance(instruction, MouseInstruction):

@@ -6,7 +6,7 @@ from Types import Instruction
 from instructions.GeneralInstruction import WaitInstruction
 from instructions.KeyboardManager import KeyTap, KeyHold
 from instructions.MouseManager import MouseClick, MouseMove
-from instructions.KeybindManager import Keybind
+from instructions.KeybindManager import KeybindTap, KeybindToggle
 
 class TokenType(Enum):
     NO_TOKEN = 0
@@ -16,6 +16,7 @@ class TokenType(Enum):
     MOUSE_INSTRUCTION_TOKEN = 4
     TIME_WAIT_TOKEN = 5
     KEYBIND_TOKEN = 6
+    TOGGLE_KEYBIND_TOKEN = 7
 
 class Parser:
 
@@ -44,6 +45,9 @@ class Parser:
                 TokenType.MOUSE_INSTRUCTION_TOKEN,
                 TokenType.TIME_WAIT_TOKEN):
             self.current_token = self.current_token[2:-1]
+        elif self.current_token_type == TokenType.TOGGLE_KEYBIND_TOKEN:
+            self.current_token = self.current_token[2:-1]
+            self.parse_key_list_from_current()
         self.tokens.append((self.current_token_type, self.current_token))
         self.current_token = ''
         self.current_token_type = TokenType.NO_TOKEN
@@ -72,6 +76,11 @@ class Parser:
                     elif self.current_token.startswith('t'):
                         self.current_token_type = TokenType.TIME_WAIT_TOKEN
                         continue
+                elif char == '{' and self.current_token.startswith(':'):
+                    self.current_token += char
+                    self.opened['{'] += 1
+                    self.current_token_type = TokenType.TOGGLE_KEYBIND_TOKEN
+                    continue
                 else:
                     self.finish_token()
             self.current_token += char
@@ -106,7 +115,7 @@ class Parser:
             elif self.current_token_type == TokenType.KEY_LIST_TOKEN:
                 if char == ']' and self.any_opened():
                     self.finish_token()
-            elif self.current_token_type == TokenType.KEYBIND_TOKEN:
+            elif self.current_token_type in (TokenType.KEYBIND_TOKEN, TokenType.TOGGLE_KEYBIND_TOKEN):
                 if char == '}' and self.any_opened():
                     self.finish_token()
 
@@ -120,7 +129,7 @@ class Parser:
             if last_token is None:
                 last_token = token
                 continue
-            if token[0] in (TokenType.KEY_LIST_TOKEN, TokenType.KEYBIND_TOKEN):
+            if token[0] in (TokenType.KEY_LIST_TOKEN, TokenType.KEYBIND_TOKEN, TokenType.TOGGLE_KEYBIND_TOKEN):
                 last_token = (
                     token[0],
                     last_token,
@@ -144,8 +153,11 @@ class Parser:
             hold_key = self.transform_token_to_instruction(token[1])
             return KeyHold(hold_key.key, token[2])
         elif token[0] == TokenType.KEYBIND_TOKEN:
-            hold_key = self.transform_token_to_instruction(token[1])
-            return Keybind(hold_key, token[2])
+            activate_key = self.transform_token_to_instruction(token[1])
+            return KeybindTap(activate_key, token[2])
+        elif token[0] == TokenType.TOGGLE_KEYBIND_TOKEN:
+            toggle_key = self.transform_token_to_instruction(token[1])
+            return KeybindToggle(toggle_key, token[2])
         elif token[0] == TokenType.MOUSE_INSTRUCTION_TOKEN:
             if re.match(r'\D+', token[1]):
                 return MouseClick(Button[token[1]])

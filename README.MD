@@ -1,5 +1,7 @@
 ## PyAutoHotKey
 
+# DEPREACATED: Because of limitation of the package i'm using this project will not be working on anymore
+
 PyAutoHotKey is an AutoHotKey-like in python with it's own syntax
 
 ---
